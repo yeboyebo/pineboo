@@ -41,11 +41,10 @@
     <addaction name="separator"/>
     <addaction name="actionSalir"/>
    </widget>
-   <widget class="QMenu" name="menuConfiguracion">
+   <widget class="QMenu" name="configMenu">
     <property name="title">
      <string>Configuración</string>
     </property>
-    <addaction name="actionEstilo"/>
     <addaction name="actionTipografia"/>
    </widget>
    <widget class="QMenu" name="menuVentanas">
@@ -67,11 +66,11 @@
     <property name="title">
      <string>Ayuda</string>
     </property>
-    <addaction name="actionAcerda_de_Pineboo"/>
-    <addaction name="actionAcerca_de_Qt"/>
+    <addaction name="actionAcercaPineboo"/>
+    <addaction name="actionAcercaQt"/>
    </widget>
    <addaction name="menuPineboo"/>
-   <addaction name="menuConfiguracion"/>
+   <addaction name="configMenu"/>
    <addaction name="menuVentanas"/>
    <addaction name="menuAyuda"/>
   </widget>
@@ -119,12 +118,12 @@
     <enum>QAction::PreferencesRole</enum>
    </property>
   </action>
-  <action name="actionAcerda_de_Pineboo">
+  <action name="actionAcercaPineboo">
    <property name="text">
-    <string>Acerda  de Pineboo</string>
+    <string>Acerca  de Pineboo</string>
    </property>
   </action>
-  <action name="actionAcerca_de_Qt">
+  <action name="actionAcercaQt">
    <property name="text">
     <string>Acerca de Qt</string>
    </property>
@@ -166,22 +165,6 @@
    <signal>toggled(bool)</signal>
    <receiver>Form</receiver>
    <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionAcerca_de_Qt</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>Form</receiver>
-   <slot>show()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

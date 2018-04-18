@@ -2,8 +2,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtCore import Qt
 from pineboolib.utils import filedir, Struct
+from pineboolib.fllegacy.FLSettings import FLSettings
 import logging
+from binascii import unhexlify
+from PyQt5.QtWidgets import QAction
 logger = logging.getLogger(__name__)
+
+import pineboolib
 
 
 class MainForm(QtWidgets.QMainWindow):
@@ -18,6 +23,9 @@ class MainForm(QtWidgets.QMainWindow):
     dockAreasTab = None
     dockFavoritos = None
     dockForm = None
+    mPAreas = {}  # Almacena los nombre de submenus areas de menú pineboo
+    mPModulos = {}  # Almacena los nombre de submenus modulos de menú pineboo
+    openTabs = []
 
     @classmethod
     def setDebugLevel(self, q):
@@ -56,7 +64,7 @@ class MainForm(QtWidgets.QMainWindow):
         self.dockForm.setWidget(self.formTab)
 
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockForm)
-        self.dockForm.setMaximumWidth(950)
+        # self.dockForm.setMaximumWidth(950)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.dockAreasTab)
         # self.dockAreasTab.show()
         # self.dockForm.show()
@@ -68,31 +76,58 @@ class MainForm(QtWidgets.QMainWindow):
         self.formTab.tabCloseRequested[int].connect(self.closeFormTab)
         self.formTab.removeTab(0)
         #app_icon = QtGui.QIcon('share/icons/pineboo-logo-16.png')
-        #app_icon.addFile(filedir('share/icons/pineboo-logo-16.png'),
+        # app_icon.addFile(filedir('share/icons/pineboo-logo-16.png'),
         #                 QtCore.QSize(16, 16))
-        #app_icon.addFile(filedir('share/icons/pineboo-logo-24.png'),
+        # app_icon.addFile(filedir('share/icons/pineboo-logo-24.png'),
         #                 QtCore.QSize(24, 24))
-        #app_icon.addFile(filedir('share/icons/pineboo-logo-32.png'),
+        # app_icon.addFile(filedir('share/icons/pineboo-logo-32.png'),
         #                 QtCore.QSize(32, 32))
-        #app_icon.addFile(filedir('share/icons/pineboo-logo-48.png'),
+        # app_icon.addFile(filedir('share/icons/pineboo-logo-48.png'),
         #                 QtCore.QSize(48, 48))
-        #app_icon.addFile(filedir('share/icons/pineboo-logo-64.png'),
+        # app_icon.addFile(filedir('share/icons/pineboo-logo-64.png'),
         #                 QtCore.QSize(64, 64))
-        #app_icon.addFile(filedir('share/icons/pineboo-logo-128.png'),
+        # app_icon.addFile(filedir('share/icons/pineboo-logo-128.png'),
         #                 QtCore.QSize(128, 128))
-        #app_icon.addFile(filedir('share/icons/pineboo-logo-256.png'),
+        # app_icon.addFile(filedir('share/icons/pineboo-logo-256.png'),
         #                 QtCore.QSize(256, 256))
-        #self.setWindowIcon(app_icon)
+        # self.setWindowIcon(app_icon)
         self.setWindowIcon(QtGui.QIcon('share/icons/pineboo-logo-16.png'))
-
+        self.actionAcercaQt.triggered.connect(pineboolib.main.aboutQt)
+        self.actionAcercaPineboo.triggered.connect(pineboolib.main.aboutPineboo)
+        self.actionTipografia.triggered.connect(pineboolib.main.fontDialog)
+        self.menuPineboo.addSeparator()
+        # self.actionEstilo.triggered.connect(pineboolib.main.styleDialog)
+        pineboolib.main.initStyle(self.configMenu)
         self.setWindowTitle("Pineboo")
+        self.showMaximized()
 
     def closeFormTab(self, numero):
-        logger.debug("Cerrando pestaña número %s ", numero)
-        self.formTab.removeTab(numero)
+        if isinstance(numero, str):
+            i = 0
+            name = numero
+            numero = None
+            for n in self.openTabs:
+                if name == n:
+                    numero = i
+                    break
+                i = i + 1
+
+        if numero is not None:
+            logger.debug("Cerrando pestaña número %s ", numero)
+            self.formTab.removeTab(numero)
+
+            i = 0
+            for name in self.openTabs:
+                if i == numero:
+                    self.openTabs.remove(name)
+                    break
+                i = i + 1
 
     def addFormTab(self, action):
         widget = action.mainform_widget
+        if action.name in self.openTabs:
+            self.closeFormTab(action.name)
+
         logger.debug("Añadiendo Form a pestaña %s", action)
         icon = None
         try:
@@ -103,6 +138,7 @@ class MainForm(QtWidgets.QMainWindow):
             self.formTab.addTab(widget, widget.windowTitle())
 
         self.formTab.setCurrentWidget(widget)
+        self.openTabs.append(action.name)
 
     def loadArea(self, area):
         assert area.idarea not in self.areas
@@ -138,8 +174,11 @@ class MainForm(QtWidgets.QMainWindow):
         vBLayout.layout.setContentsMargins(0, 0, 0, 0)
 
         vBLayout.setLayout(vBLayout.layout)
-
-        moduleToolBox.addItem(vBLayout, module.description)
+        if module.icon:
+            pixmap = QtGui.QPixmap(module.icon)
+            moduleToolBox.addItem(vBLayout, QtGui.QIcon(pixmap), module.description)
+        else:
+            moduleToolBox.addItem(vBLayout, module.description)
 
         try:
             self.moduleLoad(vBLayout.layout, module)
@@ -159,7 +198,6 @@ class MainForm(QtWidgets.QMainWindow):
         vBLayout.setContentsMargins(0, 0, 0, 0)
         for key in module.mainform.toolbar:
             action = module.mainform.actions[key]
-
             button = QtWidgets.QToolButton()
             button.setText(action.text)
             button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -169,6 +207,7 @@ class MainForm(QtWidgets.QMainWindow):
                 button.setIcon(action.icon)
             button.clicked.connect(action.run)
             vBLayout.addWidget(button)
+            self.addToMenuPineboo(action, module)
         vBLayout.addStretch()
 
     def closeEvent(self, evnt):
@@ -195,7 +234,44 @@ class MainForm(QtWidgets.QMainWindow):
         if not dialog.exec_():
             evnt.ignore()
         else:
-            logger.debug("FIXME: Guardando pestañas abiertas ...")
+            sett_ = FLSettings()
+            sett_.writeEntryList("application/mainForm/tabsOpened", self.openTabs)
+
+    def addToMenuPineboo(self, ac, mod):
+        #print(mod.name, ac.name, pineboolib.project.areas[mod.areaid].descripcion)
+        # Comprueba si el area ya se ha creado
+        if mod.areaid not in self.mPAreas.keys():
+            areaM = self.menuPineboo.addMenu(QtGui.QIcon('share/icons/gtk-open.png'), pineboolib.project.areas[mod.areaid].descripcion)
+            self.mPAreas[mod.areaid] = areaM
+        else:
+            areaM = self.mPAreas[mod.areaid]
+
+        # Comprueba si el modulo ya se ha creado
+        if mod.name not in self.mPModulos.keys():
+            pixmap = QtGui.QPixmap(mod.icon)
+            if pixmap:
+                moduloM = areaM.addMenu(QtGui.QIcon(pixmap), mod.description)
+            else:
+                moduloM = areaM.addMenu(mod.description)
+
+            self.mPModulos[mod.name] = moduloM
+        else:
+            moduloM = self.mPModulos[mod.name]
+
+        action_ = moduloM.addAction(ac.icon, ac.text)
+        action_.triggered.connect(ac.run)
+
+    def restoreOpenedTabs(self):
+        # Cargamos pestañas abiertas
+        sett_ = FLSettings()
+        tabsOpened_ = sett_.readListEntry("application/mainForm/tabsOpened")
+        if tabsOpened_:
+            for t in tabsOpened_:
+                for k, module in sorted(pineboolib.project.modules.items()):
+                    if hasattr(module, "mainform"):
+                        if t in module.mainform.actions:
+                            module.mainform.actions[t].run()
+                            break
 
 
 mainWindow = MainForm()

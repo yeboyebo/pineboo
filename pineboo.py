@@ -15,6 +15,8 @@ from optparse import OptionParser
 import signal
 import importlib
 import logging
+from pineboolib.fllegacy.FLSettings import FLSettings
+
 logger = logging.getLogger("pineboo.__main__")
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 _DGI = None
@@ -58,14 +60,25 @@ def startup_check_dependencies():
         logger.exception("El paquete python-barcode no está instalado")
         dependences.append("python-barcode")
 
+    try:
+        import PIL
+        v = PIL.__version__
+    except Exception:
+        logger.exception("El paquete Pillow no está instalado")
+        dependences.append("Pillow")
+
     if dependences:
         logger.info("HINT: Dependencias incumplidas:")
         for dep in dependences:
             logger.info("HINT: Instale el paquete %s e intente de nuevo" % dep)
         sys.exit(32)
 
-    version_check("ply", ply.__version__, '3.9')
-    version_check("pyqt5", QtCore.QT_VERSION_STR, '5.7')
+    if "python3-ply" not in dependences:
+        version_check("ply", ply.__version__, '3.9')
+    if "Pillow" not in dependences:
+        version_check("Pillow", PIL.__version__, '5.1.0')
+    if "python3-pyqt5" not in dependences:
+        version_check("pyqt5", QtCore.QT_VERSION_STR, '5.7')
 
 
 def translate_connstring(connstring):
@@ -241,10 +254,22 @@ def create_app(DGI):
             QtGui.QFontDatabase.addApplicationFont(
                 filedir("../share/fonts/Noto_Sans", fontfile))
 
-        QtWidgets.QApplication.setStyle("QtCurve")
-        font = QtGui.QFont('Noto Sans', 9)
-        font.setBold(False)
-        font.setItalic(False)
+        sett_ = FLSettings()
+
+        styleA = sett_.readEntry("application/style", None)
+        if styleA is None:
+            styleA = "Fusion"
+
+        QtWidgets.QApplication.setStyle(styleA)
+
+        fontA = sett_.readEntry("application/font", None)
+        if fontA is None:
+            font = QtGui.QFont('Noto Sans', 9)
+            font.setBold(False)
+            font.setItalic(False)
+        else:
+            font = QtGui.QFont(fontA[0], int(fontA[1]), int(fontA[2]), fontA[3] == "true")
+
         QtWidgets.QApplication.setFont(font)
 
         # Es necesario importarlo a esta altura, QApplication tiene que ser
@@ -430,6 +455,8 @@ def init_project(DGI, splash, options, project, mainForm, app):
         main_window.loadArea(area)
     for k, module in sorted(project.modules.items()):
         main_window.loadModule(module)
+    main_window.restoreOpenedTabs()
+
     if options.preload:
         preload_actions(project, options.forceload)
 

@@ -59,8 +59,10 @@ class FileDialog(QtWidgets.QFileDialog):
 
         return obj[0]
 
-    def getExistingDirectory(basedir):
-        return "%s/" % QtWidgets.QFileDialog.getExistingDirectory(basedir)
+    def getExistingDirectory(basedir, caption=None):
+        if basedir == False:
+            basedir = filedir("..")
+        return "%s/" % QtWidgets.QFileDialog.getExistingDirectory(None, caption, basedir)
 
 
 class Math(object):
@@ -199,7 +201,7 @@ class SysType(object):
         return util.getOS()
 
     def nameBD(self):
-        return pineboolib.project.conn.databaseName()
+        return pineboolib.project.conn.DBName()
 
     def setCaptionMainWidget(self, value):
         self.mainWidget().setWindowTitle("Pineboo - %s" % value)
