@@ -817,6 +817,7 @@ class XMLAction(XMLStruct):
         self.mainform = self._v("mainform")
         self.mainscript = self._v("mainscript")
         self.mainform_widget = None
+        self.formSearch_widget = None
         self.formrecord_widget = None
         self._loaded = False
         self._record_loaded = False
@@ -844,7 +845,7 @@ class XMLAction(XMLStruct):
     def load(self):
         try:
             return self._load()
-        except Exception as e:
+        except Exception:
             self.logger.exception("While loading action %s", self.name)
             return None
 

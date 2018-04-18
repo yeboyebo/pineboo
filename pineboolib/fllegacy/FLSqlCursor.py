@@ -1200,7 +1200,7 @@ class FLSqlCursor(ProjectClass):
         if (self.model().rows > 0 and not self.modeAccess() == FLSqlCursor.Insert) or not self.d.buffer_:
             if not self.d.buffer_:
                 # logger.trace("solicitando rb de", self.curName(), self.modeAccess(), self.d._currentregister, self.model().rows)
-                self.refreshBuffer()
+                return None
 
             if not self.d.buffer_:
                 # logger.trace("ERROR: FLSqlCursor(%s): aún después de refresh, no tengo buffer." % self.curName())
@@ -1552,7 +1552,6 @@ class FLSqlCursor(ProjectClass):
                 self.updateBufferCopy()
 
             self._action.openDefaultFormRecord(self)
-
             # if m != self.Insert and self.refreshBuffer():
             #     self.updateBufferCopy()
 
@@ -2389,7 +2388,6 @@ class FLSqlCursor(ProjectClass):
                 return
 
             if not fN or self.d.relation_.foreignField() == fN:
-                self.d.buffer_ = None
                 self.refreshDelayed()
                 return
         else:
@@ -2413,6 +2411,7 @@ class FLSqlCursor(ProjectClass):
     """
     @QtCore.pyqtSlot()
     def refreshDelayed(self, msec=50):
+
         if self.d.buffer_ is not None:
             return
 

@@ -355,6 +355,9 @@ class FormDBWidget(QtWidgets.QWidget):
         check_gc_referrers("FormDBWidget:" + self.__class__.__name__,
                            weakref.ref(self), self._action.name)
         if can_exit:
+            if self.parent_:
+                self._prj.call("fltesttest.iface.recibeEvento", ("formClosed", self.parent_.actionName_), None)
+
             self.closed.emit()
             event.accept()  # let the window close
             self.doCleanUp()

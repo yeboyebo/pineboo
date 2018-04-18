@@ -67,6 +67,8 @@ class FLFormSearchDB(FLFormDB):
             if not table:
                 return
 
+            self._prj = pineboolib.project
+
             self.cursor_ = FLSqlCursor(table, True, "default", None, None, self)
             self.accepted_ = False
 
@@ -106,14 +108,16 @@ class FLFormSearchDB(FLFormDB):
         # self.initForm()
 
     def setAction(self, a):
-        if not isinstance(a, str):
+        if isinstance(a, str):
+            try:
+                self.action = pineboolib.project.actions[str(a)]
+            except KeyError:
+                self.action = None
+        else:
             self.action = None
-            return
 
-        try:
-            self.action = pineboolib.project.actions[str(a)]
-        except KeyError:
-            self.action = None
+        if self.action:
+            self.action.formSearch_widget = self
 
     """
     destructor
