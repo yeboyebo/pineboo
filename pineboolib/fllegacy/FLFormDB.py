@@ -670,9 +670,8 @@ class FLFormDB(QtWidgets.QDialog):
         super(FLFormDB, self).closeEvent(e)
         self.deleteLater()
         try:
-            # self.script.form.close()
-            self.script.form = None
-            self.iface = None
+            # self.script.form = None
+            # self.iface = None
             self.widget.close()
             del self.widget
         except Exception:

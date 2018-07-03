@@ -375,11 +375,11 @@ class FormDBWidget(QtWidgets.QWidget):
                 self.logger.exception("Error al limpiar una señal: %s %s", signal, slot)
         self._formconnections.clear()
 
-        if hasattr(self, 'iface'):
-            check_gc_referrers("FormDBWidget.iface:" + self.iface.__class__.__name__,
-                               weakref.ref(self.iface), self._action.name)
-            del self.iface.ctx
-            del self.iface
+        # if hasattr(self, 'iface'):
+        #     check_gc_referrers("FormDBWidget.iface:" + self.iface.__class__.__name__,
+        #                        weakref.ref(self.iface), self._action.name)
+        #     del self.iface.ctx
+        #     del self.iface
 
     def child(self, childName):
         try:
@@ -496,14 +496,15 @@ class qsaRegExp(object):
 
     def search(self, text):
         print("Buscando " + self.strRE_ + " en " + text)
-        self.result_ = re.search(self.strRE_, text)
+        self.result_ = re.findall(self.strRE_, text)
 
     def cap(self, i):
         if self.result_ is None:
             return None
 
         try:
-            return self.result_.group(i)
+            # return self.result_.group(i)
+            return self.result_[i]
         except Exception:
             return None
 

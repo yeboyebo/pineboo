@@ -238,12 +238,14 @@ class FLFormSearchDB(FLFormDB):
         if self.initFocusWidget_:
             self.initFocusWidget_.setFocus()
 
-        if self.iface:
-            try:
-                timer1 = QtCore.QTimer(self)
-                timer1.singleShot(300, self.iface.init)
-            except Exception:
-                pass
+        # if self.iface:
+        #     try:
+        #         timer1 = QtCore.QTimer(self)
+        #         timer1.singleShot(300, self.iface.init)
+        #     except Exception:
+        #         pass
+
+        self.iface.init()
 
         if not self.isClosing_:
             timer2 = QtCore.QTimer(self)
@@ -270,6 +272,14 @@ class FLFormSearchDB(FLFormDB):
 
         self.inExec_ = False
         return v
+
+    # def callInitScript(self):
+
+    #     self.iface.init()
+
+    #     if not self.isClosing_:
+    #         self.emitFormReady
+
 
     """
     Aplica un filtro al cursor
